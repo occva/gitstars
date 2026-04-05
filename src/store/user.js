@@ -8,6 +8,7 @@ export const useUserStore = defineStore('userinfo', {
     userinfo: {},
     htmlFontSize: 16,
     lang: 'zh',
+    isSidebarVisible: true,
   }),
 
   actions: {

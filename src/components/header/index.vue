@@ -3,9 +3,14 @@
     class="flex h-16 flex-none items-center justify-between gap-2 border-b border-solid border-b-gray-300 bg-white px-4"
   >
     <div class="flex items-center">
-      <a :href="userinfo.html_url" rel="noopener noreferrer">
+      <button
+        type="button"
+        class="cursor-pointer"
+        title="显示/隐藏左侧栏"
+        @click="handleToggleSidebar"
+      >
         <img :src="userinfo.avatar_url" alt="" class="w-10 rounded-full" />
-      </a>
+      </button>
 
       <a
         :href="`${userinfo.html_url}?tab=repositories`"
@@ -41,6 +46,10 @@ import { BRAND_URI } from '@/constants';
 
 const userStore = useUserStore();
 const { userinfo } = userStore;
+
+const handleToggleSidebar = () => {
+  userStore.$patch({ isSidebarVisible: !userStore.isSidebarVisible });
+};
 
 const handleChangeLang = () => {
   const newLang = userStore.lang === 'zh' ? 'en' : 'zh';

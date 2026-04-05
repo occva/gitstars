@@ -6,3 +6,4 @@ export const TOKEN_KEY = `${BRAND}_access_token`;
 export const LOCAL_KEY_USERINFO = `${BRAND}_userinfo`;
 export const STARRED_REPOS = `${BRAND}_starred_repos`;
 export const LANG_KEY = `${BRAND}_lang`;
+export const SIDEBAR_VISIBLE_KEY = `${BRAND}_sidebar_visible`;

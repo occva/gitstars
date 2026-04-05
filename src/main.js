@@ -3,7 +3,7 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
-import { TOKEN_KEY, LANG_KEY } from '@/constants';
+import { TOKEN_KEY, LANG_KEY, SIDEBAR_VISIBLE_KEY } from '@/constants';
 import { getToken } from '@/server/gitstars';
 import { useUserStore } from '@/store/user';
 import SvgIcon from '@/components/svg-icon.vue';
@@ -60,8 +60,12 @@ async function initApp() {
 
   const userStore = useUserStore();
   const lang = localStorage.getItem(LANG_KEY);
+  const sidebarVisible = localStorage.getItem(SIDEBAR_VISIBLE_KEY);
 
   if (lang) userStore.$patch({ lang });
+  if (sidebarVisible !== null) {
+    userStore.$patch({ isSidebarVisible: sidebarVisible === '1' });
+  }
   app.use(createI18nByLocale(userStore.lang));
 
   const token = localStorage.getItem(TOKEN_KEY);
