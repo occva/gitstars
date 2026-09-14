@@ -1,12 +1,20 @@
-import { nextTick } from 'vue';
 import { defineStore } from 'pinia';
 import { getStarredRepositories } from '@/server/github';
-import { STARRED_REPOS } from '@/constants';
+import { STARRED_REPOS, STARRED_REPOS_UPDATED_AT } from '@/constants';
 import { useTagStore } from '@/store/tag';
 import { useRankingStore } from '@/store/ranking';
 
 const PAGE_SIZE = 100;
 const PARALLEL_NUM = 2;
+const CACHE_MAX_AGE = 15 * 60 * 1000;
+
+function runWhenIdle(callback) {
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(callback, { timeout: 2000 });
+  } else {
+    setTimeout(callback, 0);
+  }
+}
 
 /**
  * 通过 HTTP 获取 repositories 并更新
@@ -161,25 +169,38 @@ export const useRepositoryStore = defineStore('repository', {
       let localRepositories = localStorage.getItem(STARRED_REPOS);
 
       if (localRepositories) {
-        localRepositories = JSON.parse(localRepositories);
-        this.all = localRepositories;
+        try {
+          localRepositories = JSON.parse(localRepositories);
+          this.all = localRepositories;
+          this.loading = false;
+        } catch {
+          localStorage.removeItem(STARRED_REPOS);
+          localRepositories = null;
+        }
       }
 
-      nextTick(async () => {
-        // 开发环境默认不通过 HTTP 更新 repositories
-        // if (!import.meta.env.DEV || this.all.length === 0) {
-        const repos = await rsolveRepositoriesByHTTP();
-        // 先清空，避免新老数据 DIFF 过程中更新 DOM 导致页面崩溃
-        this.all = [];
+      const updatedAt = Number(
+        localStorage.getItem(STARRED_REPOS_UPDATED_AT) || 0,
+      );
+      if (localRepositories && Date.now() - updatedAt < CACHE_MAX_AGE) return;
 
-        nextTick(() => {
+      const refreshRepositories = async () => {
+        this.loading = true;
+        try {
+          const repos = await rsolveRepositoriesByHTTP();
           this.all = repos;
           localStorage.setItem(STARRED_REPOS, JSON.stringify(this.all));
-        });
-        // }
-      });
+          localStorage.setItem(STARRED_REPOS_UPDATED_AT, String(Date.now()));
+        } finally {
+          this.loading = false;
+        }
+      };
 
-      this.loading = false;
+      if (localRepositories) {
+        runWhenIdle(() => refreshRepositories());
+      } else {
+        await refreshRepositories();
+      }
     },
   },
 });

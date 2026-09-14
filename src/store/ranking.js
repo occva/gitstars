@@ -39,12 +39,14 @@ export const useRankingStore = defineStore('ranking', {
      * 获取语言列表
      */
     async resolveLanguageList() {
+      if (this.languageList.length > 0) return;
       this.languageList = await getGithubRankingLanguageList();
     },
     /**
      * 获取语言: 仓库列表
      */
     async resolveLanguageMap() {
+      if (Object.keys(this.languageMap).length > 0) return;
       this.languageMap = await getGithubRankingLanguageMap();
     },
   },

@@ -56,68 +56,67 @@ const readme = ref('');
 const refReadme = ref(null);
 const loading = ref(false);
 
-watchEffect(async () => {
-  if (!selectedRepository.value) return;
+watchEffect((onCleanup) => {
+  const repository = selectedRepository.value;
+  if (!repository) return;
+
+  const abortController = new AbortController();
+  onCleanup(() => abortController.abort());
+
   readme.value = '';
   loading.value = true;
 
-  // 暂存 repository id
-  const { id } = selectedRepository.value;
+  const resolveReadme = async () => {
+    try {
+      const { content, html_url } = await getRepositoryReadme(
+        {
+          owner: repository.owner.login,
+          name: repository.name,
+        },
+        abortController.signal,
+      );
+      const result = await getReadmeByMarkdown(
+        decodeURIComponent(escape(atob(content))),
+        abortController.signal,
+      );
 
-  const { content, html_url } = await getRepositoryReadme({
-    owner: selectedRepository.value.owner.login,
-    name: selectedRepository.value.name,
-  });
-  const result = await getReadmeByMarkdown(
-    decodeURIComponent(escape(atob(content))),
-  );
+      if (abortController.signal.aborted) return;
+      loading.value = false;
 
-  /**
-   * 接口异步响应需要时间
-   * 此时 selectedRepository 可能已变更
-   */
-  if (id !== selectedRepository.value.id) return;
-  loading.value = false;
+      /**
+       * https://github.com/coder/code-server/blob/main/docs/README.md
+       * =>
+       * https://github.com/coder/code-server/blob/main/docs/
+       */
+      const urlPrefix = html_url.slice(0, -9);
 
-  /**
-   * https://github.com/coder/code-server/blob/main/docs/README.md
-   * =>
-   * https://github.com/coder/code-server/blob/main/docs/
-   */
-  const urlPrefix = html_url.slice(0, -9);
+      readme.value = result
+        .replace(/<[^>]+href="([^"]+)(?=")/g, (match, p1) => {
+          const a = match.slice(0, match.lastIndexOf('"') + 1);
+          const b = toRepostoryReadmeHref(p1, { urlPrefix });
+          return a + b;
+        })
+        .replace(/<[^>]+src="([^"]+)(?=")/g, (match, p1) => {
+          const a = match.slice(0, match.lastIndexOf('"') + 1);
+          const b = toRepostoryReadmeHref(p1, { urlPrefix });
+          return (a + b).replace('/blob/', '/raw/');
+        })
+        .replace(
+          /<img(?![^>]*\bloading=)/gi,
+          '<img loading="lazy" decoding="async" fetchpriority="low"',
+        );
 
-  /**
-   * 1. <img src="https://github.com/path/to/a.png" />
-   * 2. <img src="./path/to/a.png" />
-   * 3. <img src="path/to/a.png" />
-   * 4. <img src=".filename/path/to/a.png" />
-   * 5. <img src="/path/to/a.png" />
-   */
+      nextTick(() => {
+        refReadme.value.scrollTo({ top: 0 });
+      });
+    } catch (error) {
+      if (error.name === 'AbortError') return;
+      loading.value = false;
+      onAppError(error);
+    }
+  };
 
-  /**
-   * 1. <a href="https://github.com/path/to/a.png" />
-   * 2. <a href="./path/to/a.png" />
-   * 3. <a href="path/to/a.png" />
-   * 4. <a href=".filename/path/to/a.png" />
-   * 5. <a href="/path/to/a.png" />
-   * 6. <a href="#id-to-content" />
-   */
-
-  readme.value = result
-    .replace(/<[^>]+href="([^"]+)(?=")/g, (match, p1) => {
-      const a = match.slice(0, match.lastIndexOf('"') + 1);
-      const b = toRepostoryReadmeHref(p1, { urlPrefix });
-      return a + b;
-    })
-    .replace(/<[^>]+src="([^"]+)(?=")/g, (match, p1) => {
-      const a = match.slice(0, match.lastIndexOf('"') + 1);
-      const b = toRepostoryReadmeHref(p1, { urlPrefix });
-      return (a + b).replace('/blob/', '/raw/');
-    });
-
-  nextTick(() => {
-    refReadme.value.scrollTo({ top: 0 });
-  });
+  resolveReadme();
 });
 
 const toRepositoryHref = (repository) =>

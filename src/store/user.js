@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { LOCAL_KEY_USERINFO } from '@/constants';
-import { getUserInfo } from '@/server/github';
 
 export const useUserStore = defineStore('userinfo', {
   state: () => ({
@@ -20,6 +19,7 @@ export const useUserStore = defineStore('userinfo', {
         return;
       }
 
+      const { getUserInfo } = await import('@/server/github');
       const userinfo = await getUserInfo();
       localStorage.setItem(LOCAL_KEY_USERINFO, JSON.stringify(userinfo));
       Object.assign(this.userinfo, userinfo);

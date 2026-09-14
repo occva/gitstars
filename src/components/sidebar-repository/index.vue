@@ -45,6 +45,8 @@
 
 <script setup>
 import { ref, watch } from 'vue';
+import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import RepositoryCard from './repository-card.vue';
 import RepositorySearch from './repository-search.vue';
 import { useRepositoryStore } from '@/store/repository';

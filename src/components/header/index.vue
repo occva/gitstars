@@ -9,11 +9,20 @@
         title="显示/隐藏左侧栏"
         @click="handleToggleSidebar"
       >
-        <img :src="userinfo.avatar_url" alt="" class="w-10 rounded-full" />
+        <img
+          v-if="userinfo.avatar_url"
+          :src="userinfo.avatar_url"
+          alt=""
+          width="40"
+          height="40"
+          class="w-10 rounded-full"
+        />
       </button>
 
       <a
-        :href="`${userinfo.html_url}?tab=repositories`"
+        :href="
+          userinfo.html_url ? `${userinfo.html_url}?tab=repositories` : '#'
+        "
         rel="noopener noreferrer"
         class="ml-3 text-xl font-bold text-[#948aec] hover:underline"
       >

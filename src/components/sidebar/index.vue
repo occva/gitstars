@@ -11,20 +11,24 @@
 
     <TagSrcTab />
 
-    <TagSrcTabSelf v-show="tagStore.tagSrc === 'star'" />
-    <TagSrcGithub v-show="tagStore.tagSrc === 'ranking'" />
+    <TagSrcTabSelf v-if="tagStore.tagSrc === 'star'" />
+    <TagSrcGithub v-else-if="tagStore.tagSrc === 'ranking'" />
 
     <footer
       class="brand-text h-8 flex-none border-t border-solid border-white/10 text-sm font-bold"
     >
       <a
-        :href="userStore.userinfo.html_url"
+        :href="userStore.userinfo.html_url || '#'"
         class="flex h-full items-center justify-center"
         rel="noopener noreferrer"
       >
         Author：
         <h1>
-          {{ userStore.userinfo.html_url.split('/').pop() }}
+          {{
+            userStore.userinfo.login ||
+            userStore.userinfo.html_url?.split('/').pop() ||
+            'GitHub'
+          }}
           <svg-icon name="share" class="text-xs text-[#76d0a3]" />
         </h1>
       </a>

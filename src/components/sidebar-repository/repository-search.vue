@@ -52,7 +52,7 @@
 import { ref } from 'vue';
 import { useRepositoryStore } from '@/store/repository';
 import { useTagStore } from '@/store/tag';
-import { debounce } from 'lodash';
+import { debounce } from '@/utils/timing';
 
 const tagStore = useTagStore();
 const repositoryStore = useRepositoryStore();

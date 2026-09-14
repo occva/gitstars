@@ -1,14 +1,10 @@
 import 'virtual:svg-icons-register';
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
 import { TOKEN_KEY, LANG_KEY, SIDEBAR_VISIBLE_KEY } from '@/constants';
-import { getToken } from '@/server/gitstars';
 import { useUserStore } from '@/store/user';
 import SvgIcon from '@/components/svg-icon.vue';
-import VueVirtualScroller from 'vue-virtual-scroller';
-import { throttle } from 'lodash';
 import { createI18nByLocale } from './i18n';
 
 function onResize() {
@@ -36,26 +32,29 @@ async function resolveToken() {
 
   removeURLCode();
 
+  const { getToken } = await import('@/server/gitstars');
   const res = await getToken(code).catch((err) => {
     onAppError(err);
   });
 
-  if (!res.access_token) {
-    onAppError({ message: `${res.error}. ${res.error_description}` });
-    throw new Error(res);
+  if (!res?.access_token) {
+    const message = res
+      ? `${res.error}. ${res.error_description}`
+      : 'Unable to exchange the GitHub authorization code';
+    onAppError({ message });
+    throw new Error(message);
   }
 
   localStorage.setItem(TOKEN_KEY, res.access_token);
 
   const userStore = useUserStore();
   userStore.$patch({ token: res.access_token });
-  await userStore.resolveUserinfo();
+  userStore.resolveUserinfo().catch(onAppError);
 }
 
 async function initApp() {
   const app = createApp(App);
   app.use(createPinia());
-  app.use(VueVirtualScroller);
   app.component(SvgIcon.name, SvgIcon);
 
   const userStore = useUserStore();
@@ -72,14 +71,22 @@ async function initApp() {
 
   if (token) {
     userStore.$patch({ token });
-    await userStore.resolveUserinfo();
+    userStore.resolveUserinfo().catch(onAppError);
   } else {
     await resolveToken();
   }
 
   app.mount('#app');
 
-  window.addEventListener('resize', throttle(onResize, 300));
+  let resizeFrame;
+  window.addEventListener(
+    'resize',
+    () => {
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(onResize);
+    },
+    { passive: true },
+  );
   onResize();
 }
 

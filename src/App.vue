@@ -1,33 +1,25 @@
 <template>
-  <template v-if="userStore.token">
-    <Sidebar v-if="userStore.isSidebarVisible" />
-    <div class="flex flex-auto flex-col" :style="mainContentStyle">
-      <Header />
-      <div class="flex" style="height: calc(100% - 4rem)">
-        <SidebarRepository />
-        <RepositoryContent />
-      </div>
-    </div>
-  </template>
+  <Suspense v-if="userStore.token">
+    <AuthenticatedApp />
+    <template #fallback>
+      <span class="loader"></span>
+    </template>
+  </Suspense>
   <Unauth v-else />
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import Sidebar from '@/components/sidebar/index.vue';
-import Header from '@/components/header/index.vue';
-import SidebarRepository from '@/components/sidebar-repository/index.vue';
-import RepositoryContent from '@/components/repository-content/index.vue';
+import { defineAsyncComponent } from 'vue';
 import Unauth from '@/components/unauth.vue';
 import { useUserStore } from '@/store/user';
 import { useI18n } from 'vue-i18n';
 import { LANG_KEY, SIDEBAR_VISIBLE_KEY } from '@/constants';
 
+const AuthenticatedApp = defineAsyncComponent(
+  () => import('@/components/authenticated-app.vue'),
+);
 const userStore = useUserStore();
 const { locale } = useI18n();
-const mainContentStyle = computed(() => ({
-  width: userStore.isSidebarVisible ? 'calc(100% - 18rem)' : '100%',
-}));
 
 userStore.$subscribe((mutation) => {
   const payload = mutation.payload || {};

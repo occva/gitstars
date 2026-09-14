@@ -1,20 +1,24 @@
-import { httpRequestGithub } from './http-request';
+import { requestGithub } from './http-request';
 
 export async function getUserInfo() {
-  return httpRequestGithub.get('/user');
+  return requestGithub('/user');
 }
 
 export async function getStarredRepositories(params) {
-  return httpRequestGithub.get('/user/starred', { params });
+  return requestGithub('/user/starred', { params });
 }
 
-export async function getRepositoryReadme(params) {
-  return httpRequestGithub.get(`/repos/${params.owner}/${params.name}/readme`);
+export async function getRepositoryReadme(params, signal) {
+  return requestGithub(`/repos/${params.owner}/${params.name}/readme`, {
+    signal,
+  });
 }
 
-export async function getReadmeByMarkdown(content) {
-  return httpRequestGithub.post('/markdown', {
-    text: content,
+export async function getReadmeByMarkdown(content, signal) {
+  return requestGithub('/markdown', {
+    method: 'POST',
+    body: { text: content },
+    signal,
   });
 }
 

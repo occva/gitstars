@@ -60,7 +60,6 @@ watch(
   () => {
     tagStore.analyze();
   },
-  { deep: true },
 );
 
 const handleClickTagAll = () => {
