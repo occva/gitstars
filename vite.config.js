@@ -4,8 +4,12 @@ import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import path from 'path';
 import { loadEnv } from 'vite';
 
-const envLocal = loadEnv(process.env.NODE_ENV, process.cwd());
+const envLocal = loadEnv(process.env.NODE_ENV, process.cwd(), '');
 const isDev = process.env.NODE_ENV === 'development';
+const certificateDirectory = path.resolve(
+  process.cwd(),
+  envLocal.GITSTARS_CERT_DIR || '.certs',
+);
 
 const toConfig = () => {
   const config = {
@@ -26,8 +30,8 @@ const toConfig = () => {
   if (isDev) {
     config.server = {
       https: {
-        key: './cert/localhost.key',
-        cert: './cert/localhost.crt',
+        key: path.join(certificateDirectory, 'localhost-key.pem'),
+        cert: path.join(certificateDirectory, 'localhost.pem'),
       },
       host: true,
       port: '30000',

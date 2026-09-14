@@ -3,7 +3,9 @@
   "private": true,
   "version": "2.0.0",
   "type": "module",
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
+    "cert:local": "sh scripts/setup-local-https.sh",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",

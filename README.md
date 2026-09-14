@@ -1,54 +1,226 @@
-![](public/brand.png)
+![Gitstars](public/brand.png)
 
 <div align="center">
 
-简体中文 / [English](./README-EN.md)
+[简体中文](./README.md) / [English](./README-EN.md)
 
-Github Stars 存储库管理器，开发者必备的存储库管理工具。
+一个用于整理、搜索和浏览 GitHub Stars 的仓库管理器。
 
 </div>
 
-## 🎯 背景
+## Gitstars 是什么
 
-Github 作为开发者的第一社交平台，拥有数不胜数的优秀开源项目，给工作和学习带来巨大方便，遇到自己需要或是喜爱的项目只需点击 Star 便可收入囊中。
+随着 Starred Repositories 不断增加，仅靠 GitHub 自带的列表很难快速找回某个项目。Gitstars 会同步你的公开 Stars，并按照 Topics 和编程语言进行整理，让搜索、筛选和回顾收藏仓库更简单。
 
-Star is easy，可随着 Starred Repositories 增长，在需要使用到某个项目时难免记不清叫什么，而 Github 又只提供简单的搜索，找到目标 Starred Repository 竟也成了件小小的麻烦事。
+Gitstars 还提供按编程语言分类的 GitHub 仓库排行榜，帮助你发现值得关注的开源项目。
 
-所以拥有自己的 Github Stars Repositories Manager 也算是开发者的必备需求。
+## 功能
 
-Gitstars 由此诞生 💡
+- **Your Stars**：同步并浏览当前 GitHub 账号的 Starred Repositories。
+- **分类筛选**：根据 Topics 和主要编程语言自动归类。
+- **快速搜索**：按开发者、仓库名称和描述查找项目。
+- **灵活排序**：支持按 Star 时间或 Star 数量排序。
+- **Gitstars Ranking**：查看不同编程语言的热门仓库 Top 100。
+- **README 预览**：无需离开 Gitstars 即可阅读仓库 README。
+- **仓库直达**：快速打开 GitHub 仓库或项目网站。
+- **中英文界面**：可在页面中切换简体中文与英文。
 
-## 👀 发现好项目：Gitstars Ranking（2023-09-09）
+## 界面预览
 
-<strong>Gitstars Ranking</strong>：帮助你发现 Github Stars 数量排名前 100 的好项目，支持各种编程语言分类，每日更新。
+### Your Stars
 
-![](public/example-github-ranking.png)
+按 Topics 和 Language 整理、搜索你的 Stars：
 
-## 🚀 快速找到自己 Star 的仓库：Your Stars
+![Your Stars](public/example-your-stars.png)
 
-<strong>Your Stars</strong>：整理你的 Stars 仓库，根据 Topics 和 Language 进行分类，帮助你快速找到目标项目。
+### Gitstars Ranking
 
-![](public/example-your-stars.png)
+按编程语言查看 GitHub 热门仓库：
 
-## 👻 其它特性
+![Gitstars Ranking](public/example-github-ranking.png)
 
-- <strong>README.md 预览</strong>：无需跳转到 Github 查看 README.md，在 Gitstars 即可查看。
-- <strong>链接直达</strong>：Github 仓库、项目 Webiste；
+### Topics 与 Language
 
-## 📖 说明
+Topics 是仓库作者维护的主题标签，适合描述项目用途和技术领域：
 
-### Topics：仓库的标签集
+![Topics](public/example-topics.png)
 
-标签集由 Repository 作者定义，一般都是与 Repository 相关的关键词，大多以英文为主。
+Language 是 GitHub 根据仓库文件统计出的主要编程语言：
 
-![](public/example-topics.png)
+![Languages](public/example-languages.png)
 
-### Language：仓库的主编程语言
+## Docker 本地部署
 
-Github 会统计分析 Repository 的文件，确定 Repository 的主编程语言。
+Docker 部署默认启用 HTTPS，推荐使用 [mkcert](https://github.com/FiloSottile/mkcert) 生成本机信任的开发证书。
 
-![](public/example-languages.png)
+### 环境要求
 
-## 🤖 Vercel 部署
+- Docker 与 Docker Compose
+- mkcert
+- GitHub OAuth App
 
-[WIKI Vercel 部署](https://github.com/cfour-hi/gitstars/wiki/Vercel-%E9%83%A8%E7%BD%B2)
+### 1. 创建 GitHub OAuth App
+
+打开 [GitHub Developer Settings](https://github.com/settings/developers)，新建一个 OAuth App，并填写：
+
+| 配置项 | 本地默认值 |
+| --- | --- |
+| Homepage URL | `https://localhost:8080` |
+| Authorization callback URL | `https://localhost:8080` |
+
+回调地址必须与浏览器实际访问地址的**协议、主机和端口完全一致**。如果通过 `GITSTARS_PORT` 修改了 Docker 对外端口，GitHub OAuth App 的回调地址也必须使用相同端口。
+
+### 2. 配置环境变量
+
+复制环境变量模板：
+
+```bash
+cp .env.example .env
+```
+
+编辑 `.env`，填入 OAuth App 的 Client ID 和 Client Secret：
+
+```dotenv
+VITE_GITSTARS_CLIENT_ID=your_github_oauth_client_id
+GITHUB_CLIENT_SECRET=your_github_oauth_client_secret
+
+GITSTARS_PORT=8080
+GITSTARS_CERT_DIR=./.certs
+```
+
+### 3. 生成本地 HTTPS 证书
+
+```bash
+./scripts/setup-local-https.sh
+```
+
+脚本会通过 mkcert 安装本地开发 CA，并在 `.certs` 目录生成：
+
+```text
+.certs/localhost.pem
+.certs/localhost-key.pem
+```
+
+证书覆盖 `localhost`、`127.0.0.1` 和 `::1`。`.certs` 已被 Git 和 Docker 构建上下文忽略，证书仅以只读方式挂载到运行容器中。
+
+### 4. 构建并启动
+
+```bash
+docker compose up -d --build
+```
+
+启动完成后访问：
+
+- Gitstars：[https://localhost:8080](https://localhost:8080)
+- 健康检查：[https://localhost:8080/healthz](https://localhost:8080/healthz)
+
+查看运行状态和日志：
+
+```bash
+docker compose ps
+docker compose logs -f gitstars
+```
+
+停止服务：
+
+```bash
+docker compose down
+```
+
+## 环境变量
+
+| 变量 | 是否必填 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `VITE_GITSTARS_CLIENT_ID` | 是 | — | GitHub OAuth App Client ID；构建时写入前端静态资源 |
+| `GITHUB_CLIENT_SECRET` | 是 | — | GitHub OAuth App Client Secret；仅在容器运行时注入 |
+| `GITSTARS_PORT` | 否 | `8080` | 映射到宿主机的 HTTPS 端口 |
+| `GITSTARS_CERT_DIR` | 否 | `./.certs` | 包含 `localhost.pem` 和 `localhost-key.pem` 的证书目录 |
+
+修改 `VITE_GITSTARS_CLIENT_ID` 后必须重新构建镜像：
+
+```bash
+docker compose up -d --build
+```
+
+只修改 `GITHUB_CLIENT_SECRET` 时，重新创建容器即可：
+
+```bash
+docker compose up -d --force-recreate
+```
+
+## OAuth 常见问题
+
+### `The redirect_uri is not associated with this application`
+
+Gitstars 使用浏览器当前的 `location.origin` 作为 OAuth `redirect_uri`。请确认 GitHub OAuth App 中的 Authorization callback URL 与访问地址完全一致：
+
+| 实际访问地址 | 正确的回调地址 |
+| --- | --- |
+| `https://localhost:8080` | `https://localhost:8080` |
+| `https://127.0.0.1:8080` | `https://127.0.0.1:8080` |
+
+以下内容均不能混用：
+
+- `http` 与 `https`
+- `localhost` 与 `127.0.0.1`
+- 不同端口
+
+回调地址应填写站点根地址，不要填写 `/api/oauth/access_token`。
+
+### 浏览器提示证书不受信任
+
+重新生成并安装本地证书，然后重启浏览器：
+
+```bash
+./scripts/setup-local-https.sh
+```
+
+Firefox 使用独立的证书库，必要时需要单独信任 mkcert 的本地 CA。
+
+### 修改 Client ID 后仍然跳转到旧应用
+
+Client ID 会在构建阶段写入前端文件，修改 `.env` 后需要带 `--build` 重新启动：
+
+```bash
+docker compose up -d --build
+```
+
+## 本地前端开发
+
+本地开发需要 Node.js 18 或更高版本，以及 pnpm 9：
+
+```bash
+pnpm install
+pnpm cert:local
+pnpm dev
+```
+
+Vite 开发服务器默认运行在 `https://localhost:30000`，并使用与 Docker 相同的 `.certs` 证书目录。这个端口来自 Vite 开发配置，与 Docker 默认使用的 `8080` 无关。若需要代理 OAuth 接口，可通过 `VITE_API_PROXY` 指定后端服务地址。
+
+常用命令：
+
+| 命令 | 说明 |
+| --- | --- |
+| `pnpm dev` | 启动 Vite 开发服务器 |
+| `pnpm build` | 构建生产版本 |
+| `pnpm preview` | 预览生产构建 |
+| `pnpm cert:local` | 生成并信任本地 HTTPS 证书 |
+
+## Vercel 部署
+
+参阅 [Vercel 部署 Wiki](https://github.com/cfour-hi/gitstars/wiki/Vercel-%E9%83%A8%E7%BD%B2)。
+
+## 技术栈
+
+- Vue 3、Vite、Pinia
+- Tailwind CSS
+- GitHub REST API 与 OAuth
+- Node.js HTTPS Server
+- Docker Compose
+
+## 安全说明
+
+- `GITHUB_CLIENT_SECRET` 只注入运行容器，不会写入前端静态资源或最终镜像。
+- 本地证书和私钥位于 `.certs`，不会提交到 Git，也不会进入 Docker 构建上下文。
+- OAuth Access Token 保存在浏览器 LocalStorage 中，请仅在可信设备上使用。
+- 不要提交 `.env`、Client Secret 或本地证书私钥。
