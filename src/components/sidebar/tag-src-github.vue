@@ -33,8 +33,7 @@ import TagItem from './tag-item.vue';
 import TagSearch from './tag-search.vue';
 
 const rankingStore = useRankingStore();
-rankingStore.resolveLanguageList();
-rankingStore.resolveLanguageMap();
+rankingStore.resolve();
 
 const languageList = computed(() => {
   const filterText = rankingStore.filterText.toLowerCase();

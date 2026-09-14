@@ -55,10 +55,38 @@ const { selectedRepository } = storeToRefs(useRepositoryStore());
 const readme = ref('');
 const refReadme = ref(null);
 const loading = ref(false);
+const readmeCache = new Map();
+const README_CACHE_SIZE = 5;
+
+function scrollReadmeToTop() {
+  nextTick(() => refReadme.value?.scrollTo({ top: 0 }));
+}
+
+function cacheReadme(id, html) {
+  readmeCache.delete(id);
+  readmeCache.set(id, html);
+
+  if (readmeCache.size > README_CACHE_SIZE) {
+    readmeCache.delete(readmeCache.keys().next().value);
+  }
+}
 
 watchEffect((onCleanup) => {
   const repository = selectedRepository.value;
-  if (!repository) return;
+  if (!repository) {
+    readme.value = '';
+    loading.value = false;
+    return;
+  }
+
+  if (readmeCache.has(repository.id)) {
+    const cachedReadme = readmeCache.get(repository.id);
+    cacheReadme(repository.id, cachedReadme);
+    readme.value = cachedReadme;
+    loading.value = false;
+    scrollReadmeToTop();
+    return;
+  }
 
   const abortController = new AbortController();
   onCleanup(() => abortController.abort());
@@ -90,7 +118,7 @@ watchEffect((onCleanup) => {
        */
       const urlPrefix = html_url.slice(0, -9);
 
-      readme.value = result
+      const resolvedReadme = result
         .replace(/<[^>]+href="([^"]+)(?=")/g, (match, p1) => {
           const a = match.slice(0, match.lastIndexOf('"') + 1);
           const b = toRepostoryReadmeHref(p1, { urlPrefix });
@@ -103,12 +131,12 @@ watchEffect((onCleanup) => {
         })
         .replace(
           /<img(?![^>]*\bloading=)/gi,
-          '<img loading="lazy" decoding="async" fetchpriority="low"',
+          '<img loading="lazy" decoding="async"',
         );
 
-      nextTick(() => {
-        refReadme.value.scrollTo({ top: 0 });
-      });
+      cacheReadme(repository.id, resolvedReadme);
+      readme.value = resolvedReadme;
+      scrollReadmeToTop();
     } catch (error) {
       if (error.name === 'AbortError') return;
       loading.value = false;

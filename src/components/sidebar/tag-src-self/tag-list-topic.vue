@@ -10,7 +10,11 @@
       <TagItem
         :tag="item"
         :data-topic="item.label"
-        :class="{ selected: item.label === tagStore.selectedTag }"
+        :class="{
+          selected:
+            tagStore.selectedTagType === 'topic' &&
+            item.label === tagStore.selectedTag,
+        }"
       />
     </template>
   </RecycleScroller>
@@ -18,6 +22,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { RecycleScroller } from 'vue-virtual-scroller';
 import { useTagStore } from '@/store/tag';
 import { useUserStore } from '@/store/user';
 import { useTag } from '@/hooks/tag';

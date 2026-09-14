@@ -5,7 +5,11 @@
       :key="item.label"
       :tag="item"
       :data-language="item.label"
-      :class="{ selected: item.label === tagStore.selectedTag }"
+      :class="{
+        selected:
+          tagStore.selectedTagType === 'language' &&
+          item.label === tagStore.selectedTag,
+      }"
     />
   </ul>
 </template>

@@ -27,8 +27,8 @@
       </TagSearch>
 
       <section class="flex-auto overflow-auto">
-        <TagListLanguage v-show="tagStore.selectedTagTypeNav === 'language'" />
-        <TagListTopic v-show="tagStore.selectedTagTypeNav === 'topic'" />
+        <TagListLanguage v-if="tagStore.selectedTagTypeNav === 'language'" />
+        <TagListTopic v-else />
       </section>
 
       <TagTypeNav />
@@ -60,6 +60,7 @@ watch(
   () => {
     tagStore.analyze();
   },
+  { immediate: true },
 );
 
 const handleClickTagAll = () => {

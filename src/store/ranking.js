@@ -22,6 +22,7 @@ export const useRankingStore = defineStore('ranking', {
      * 语言 tag 过滤
      */
     filterText: '',
+    loading: false,
   }),
 
   getters: {
@@ -35,6 +36,19 @@ export const useRankingStore = defineStore('ranking', {
   },
 
   actions: {
+    async resolve() {
+      if (this.languageMap.all) return;
+
+      this.loading = true;
+      try {
+        await Promise.all([
+          this.resolveLanguageList(),
+          this.resolveLanguageMap(),
+        ]);
+      } finally {
+        this.loading = false;
+      }
+    },
     /**
      * 获取语言列表
      */

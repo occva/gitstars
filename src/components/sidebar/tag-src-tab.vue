@@ -25,20 +25,22 @@
 <script setup>
 import { useTagStore } from '@/store/tag';
 import { useRankingStore } from '@/store/ranking';
+import { useRepositoryStore } from '@/store/repository';
 
 const tagStore = useTagStore();
 const rankingStore = useRankingStore();
+const repositoryStore = useRepositoryStore();
 
 const toTabLoading = (tab) => {
-  if (tab === 'ranking') {
-    return !rankingStore.languageMap.all;
-  }
-  return false;
+  return tab === 'ranking' && rankingStore.loading;
 };
 
-function handleClickTab(tab) {
-  if (tab === 'ranking' && !rankingStore.languageMap.all) return;
+async function handleClickTab(tab) {
+  if (tab === tagStore.tagSrc || rankingStore.loading) return;
+  if (tab === 'ranking') await rankingStore.resolve();
+
   tagStore.$patch({ tagSrc: tab });
+  repositoryStore.$patch({ selectedId: null });
 }
 </script>
 
